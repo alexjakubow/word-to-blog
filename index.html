@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Word to Blog</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        --bg: #ffffff;
+        --bg-secondary: #f7f6f3;
+        --bg-tertiary: #f0efe9;
+        --text: #1a1a18;
+        --text-secondary: #6b6b65;
+        --text-tertiary: #9a9a92;
+        --border: rgba(0, 0, 0, 0.1);
+        --border-md: rgba(0, 0, 0, 0.18);
+        --accent: #1a1a18;
+        --info-bg: #eef4fc;
+        --info-text: #1a4a8a;
+        --success-bg: #eaf5ee;
+        --success-text: #1a6635;
+        --warning-bg: #fdf3e3;
+        --warning-text: #7a4a0a;
+        --radius-md: 8px;
+        --radius-lg: 12px;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #1c1c1a;
+          --bg-secondary: #252523;
+          --bg-tertiary: #2e2e2b;
+          --text: #f0efe9;
+          --text-secondary: #9a9a92;
+          --text-tertiary: #6b6b65;
+          --border: rgba(255, 255, 255, 0.1);
+          --border-md: rgba(255, 255, 255, 0.18);
+          --accent: #f0efe9;
+          --info-bg: #0d2444;
+          --info-text: #90baf5;
+          --success-bg: #0d2e19;
+          --success-text: #7fd49a;
+          --warning-bg: #2e1e06;
+          --warning-text: #f5c06a;
+        }
+      }
+
+      html,
+      body {
+        min-height: 100vh;
+        background: var(--bg-tertiary);
+        font-family: "DM Sans", system-ui, sans-serif;
+        color: var(--text);
+      }
+
+      header {
+        background: var(--bg);
+        border-bottom: 0.5px solid var(--border);
+        padding: 0 2rem;
+        height: 56px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .logo {
+        font-size: 15px;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .logo-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--text);
+        opacity: 0.4;
+      }
+      .header-hint {
+        font-size: 12px;
+        color: var(--text-tertiary);
+      }
+
+      main {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2.5rem 1.5rem;
+      }
+
+      #drop-zone {
+        border: 1.5px dashed var(--border-md);
+        border-radius: var(--radius-lg);
+        padding: 4rem 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          border-color 0.15s;
+        background: var(--bg);
+      }
+      #drop-zone:hover,
+      #drop-zone.dragover {
+        background: var(--info-bg);
+        border-color: var(--info-text);
+      }
+      .dz-icon {
+        width: 44px;
+        height: 44px;
+        margin: 0 auto 16px;
+        opacity: 0.35;
+        color: var(--text);
+      }
+      .dz-title {
+        font-size: 16px;
+        font-weight: 500;
+        margin-bottom: 6px;
+      }
+      .dz-sub {
+        font-size: 14px;
+        color: var(--text-secondary);
+      }
+      #file-input {
+        display: none;
+      }
+
+      #toolbar {
+        display: none;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 14px;
+        background: var(--bg);
+        border: 0.5px solid var(--border);
+        border-radius: var(--radius-md);
+        margin-bottom: 1rem;
+      }
+      #filename {
+        font-size: 13px;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .badge {
+        font-size: 11px;
+        background: var(--success-bg);
+        color: var(--success-text);
+        padding: 2px 8px;
+        border-radius: var(--radius-md);
+        font-weight: 500;
+      }
+      .btn-group {
+        display: flex;
+        gap: 8px;
+      }
+      button {
+        font-size: 13px;
+        padding: 7px 16px;
+        border-radius: var(--radius-md);
+        border: 0.5px solid var(--border-md);
+        background: var(--bg);
+        color: var(--text);
+        cursor: pointer;
+        font-family: "DM Sans", system-ui, sans-serif;
+        transition: background 0.1s;
+      }
+      button:hover {
+        background: var(--bg-secondary);
+      }
+      button.primary {
+        background: var(--accent);
+        color: var(--bg);
+        border-color: var(--accent);
+      }
+      button.primary:hover {
+        opacity: 0.85;
+      }
+
+      #panels {
+        display: none;
+      }
+
+      .panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+      .panel-label {
+        font-size: 11px;
+        font-weight: 500;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        color: var(--text-tertiary);
+      }
+
+      #tab-bar {
+        display: flex;
+        gap: 4px;
+      }
+      .tab {
+        font-size: 12px;
+        padding: 5px 12px;
+        border-radius: var(--radius-md);
+        border: 0.5px solid var(--border);
+        background: transparent;
+        color: var(--text-secondary);
+        cursor: pointer;
+      }
+      .tab.active {
+        background: var(--bg);
+        color: var(--text);
+        border-color: var(--border-md);
+      }
+
+      #preview-pane {
+        border: 0.5px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 2.5rem;
+        background: var(--bg);
+        min-height: 400px;
+        max-height: 70vh;
+        overflow-y: auto;
+        font-family: "Lora", Georgia, serif;
+        font-size: 17px;
+        line-height: 1.8;
+        color: var(--text);
+      }
+      #preview-pane h1 {
+        font-size: 28px;
+        font-weight: 500;
+        margin: 1.5rem 0 0.75rem;
+        line-height: 1.25;
+      }
+      #preview-pane h2 {
+        font-size: 21px;
+        font-weight: 500;
+        margin: 1.5rem 0 0.5rem;
+      }
+      #preview-pane h3 {
+        font-size: 18px;
+        font-weight: 500;
+        margin: 1.25rem 0 0.4rem;
+      }
+      #preview-pane p {
+        margin-bottom: 1.1rem;
+      }
+      #preview-pane a {
+        color: var(--info-text);
+      }
+      #preview-pane strong {
+        font-weight: 500;
+      }
+      #preview-pane ul,
+      #preview-pane ol {
+        margin: 0.5rem 0 1.1rem 1.5rem;
+      }
+      #preview-pane li {
+        margin-bottom: 0.35rem;
+      }
+      #preview-pane blockquote {
+        border-left: 2px solid var(--border-md);
+        padding-left: 1.25rem;
+        color: var(--text-secondary);
+        margin: 1.25rem 0;
+        font-style: italic;
+      }
+      #preview-pane img {
+        max-width: 100%;
+        border-radius: var(--radius-md);
+        margin: 0.75rem 0;
+      }
+      #preview-pane hr {
+        border: none;
+        border-top: 0.5px solid var(--border);
+        margin: 1.5rem 0;
+      }
+
+      .code-pane {
+        display: none;
+        border: 0.5px solid var(--border);
+        border-radius: var(--radius-lg);
+        background: var(--bg-secondary);
+        min-height: 400px;
+        max-height: 70vh;
+        overflow-y: auto;
+      }
+      .code-output {
+        font-family: "DM Mono", "Courier New", monospace;
+        font-size: 12px;
+        line-height: 1.75;
+        color: var(--text-secondary);
+        padding: 1.5rem;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+
+      #image-notice {
+        display: none;
+        margin-top: 12px;
+        padding: 10px 16px;
+        background: var(--warning-bg);
+        border-radius: var(--radius-md);
+        font-size: 13px;
+        color: var(--warning-text);
+      }
+
+      #toast {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: var(--accent);
+        color: var(--bg);
+        font-size: 13px;
+        font-family: "DM Sans", system-ui, sans-serif;
+        padding: 9px 18px;
+        border-radius: var(--radius-md);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s;
+        z-index: 100;
+      }
+      #toast.show {
+        opacity: 1;
+      }
+
+      footer {
+        text-align: center;
+        padding: 2rem;
+        font-size: 12px;
+        color: var(--text-tertiary);
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="logo">
+        <div class="logo-dot"></div>
+        Word to Blog
+      </div>
+      <span class="header-hint"
+        >Runs entirely in your browser &mdash; no uploads</span
+      >
+    </header>
+
+    <main>
+      <div
+        id="drop-zone"
+        onclick="document.getElementById('file-input').click()"
+      >
+        <svg
+          class="dz-icon"
+          viewBox="0 0 44 44"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <rect
+            x="7"
+            y="4"
+            width="24"
+            height="34"
+            rx="2.5"
+            stroke="currentColor"
+            stroke-width="1.5"
+            fill="none"
+          />
+          <path
+            d="M24 4v9h10"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linejoin="round"
+            fill="none"
+          />
+          <path
+            d="M13 20h16M13 26h12"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+          />
+          <circle
+            cx="34"
+            cy="34"
+            r="8"
+            fill="var(--bg)"
+            stroke="currentColor"
+            stroke-width="1.5"
+          />
+          <path
+            d="M34 30v8M30 34h8"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+          />
+        </svg>
+        <p class="dz-title">Drop your Word document here</p>
+        <p class="dz-sub">or click to browse &mdash; .docx files only</p>
+      </div>
+      <input type="file" id="file-input" accept=".docx" />
+
+      <div id="toolbar">
+        <div id="filename">
+          <span id="fname-text"></span>
+          <span class="badge">converted</span>
+        </div>
+        <div class="btn-group">
+          <button onclick="resetApp()">New file</button>
+          <button class="primary" id="copy-btn" onclick="copyActive()">
+            Copy HTML
+          </button>
+        </div>
+      </div>
+
+      <div id="panels">
+        <div class="panel-header">
+          <div class="panel-label">Output</div>
+          <div id="tab-bar">
+            <button class="tab active" onclick="showTab('preview', this)">
+              Preview
+            </button>
+            <button class="tab" onclick="showTab('html', this)">HTML</button>
+            <button class="tab" onclick="showTab('markdown', this)">
+              Markdown
+            </button>
+          </div>
+        </div>
+        <div id="preview-pane"></div>
+        <div id="html-pane" class="code-pane">
+          <div id="html-output" class="code-output"></div>
+        </div>
+        <div id="markdown-pane" class="code-pane">
+          <div id="markdown-output" class="code-output"></div>
+        </div>
+      </div>
+
+      <div id="image-notice">
+        Images detected in your document. They're embedded as previews here. In
+        Squarespace, re-upload them using the image block for best quality.
+      </div>
+    </main>
+
+    <footer>
+      No files leave your computer &mdash; all conversion happens locally in
+      your browser.
+    </footer>
+    <div id="toast"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <script>
+      let convertedHTML = "";
+      let convertedMarkdown = "";
+      let activeTab = "preview";
+
+      const dz = document.getElementById("drop-zone");
+      const fileInput = document.getElementById("file-input");
+
+      dz.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dz.classList.add("dragover");
+      });
+      dz.addEventListener("dragleave", () => dz.classList.remove("dragover"));
+      dz.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dz.classList.remove("dragover");
+        const f = e.dataTransfer.files[0];
+        if (f && f.name.endsWith(".docx")) processFile(f);
+      });
+      fileInput.addEventListener("change", (e) => {
+        if (e.target.files[0]) processFile(e.target.files[0]);
+      });
+
+      function processFile(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const styleMap = [
+            "p[style-name='Heading 1'] => h1:fresh",
+            "p[style-name='Heading 2'] => h2:fresh",
+            "p[style-name='Heading 3'] => h3:fresh",
+            "p[style-name='Quote'] => blockquote:fresh",
+            "p[style-name='Block Text'] => blockquote:fresh",
+          ];
+          Promise.all([
+            mammoth.convertToHtml(
+              { arrayBuffer: e.target.result },
+              { styleMap },
+            ),
+            mammoth.convertToMarkdown(
+              { arrayBuffer: e.target.result },
+              { styleMap },
+            ),
+          ]).then(([htmlResult, mdResult]) => {
+            convertedHTML = htmlResult.value;
+            convertedMarkdown = mdResult.value;
+
+            document.getElementById("fname-text").textContent = file.name;
+            document.getElementById("drop-zone").style.display = "none";
+            document.getElementById("toolbar").style.display = "flex";
+            document.getElementById("panels").style.display = "block";
+
+            document.getElementById("preview-pane").innerHTML = convertedHTML;
+            document.getElementById("html-output").textContent =
+              formatHTML(convertedHTML);
+            document.getElementById("markdown-output").textContent =
+              convertedMarkdown;
+
+            if (convertedHTML.includes("<img")) {
+              document.getElementById("image-notice").style.display = "block";
+            }
+          });
+        };
+        reader.readAsArrayBuffer(file);
+      }
+
+      function formatHTML(html) {
+        return html
+          .replace(/></g, ">\n<")
+          .split("\n")
+          .map((l) => l.trim())
+          .filter((l) => l.length > 0)
+          .join("\n");
+      }
+
+      function showTab(tab, btn) {
+        activeTab = tab;
+        document
+          .querySelectorAll(".tab")
+          .forEach((t) => t.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById("preview-pane").style.display =
+          tab === "preview" ? "block" : "none";
+        document.getElementById("html-pane").style.display =
+          tab === "html" ? "block" : "none";
+        document.getElementById("markdown-pane").style.display =
+          tab === "markdown" ? "block" : "none";
+        document.getElementById("copy-btn").textContent =
+          tab === "markdown" ? "Copy Markdown" : "Copy HTML";
+      }
+
+      function copyActive() {
+        const content =
+          activeTab === "markdown" ? convertedMarkdown : convertedHTML;
+        navigator.clipboard
+          .writeText(content)
+          .then(() =>
+            showToast(
+              activeTab === "markdown" ? "Markdown copied" : "HTML copied",
+            ),
+          );
+      }
+
+      function showToast(msg) {
+        const t = document.getElementById("toast");
+        t.textContent = msg;
+        t.classList.add("show");
+        setTimeout(() => t.classList.remove("show"), 2000);
+      }
+
+      function resetApp() {
+        convertedHTML = "";
+        convertedMarkdown = "";
+        activeTab = "preview";
+        document.getElementById("drop-zone").style.display = "block";
+        document.getElementById("toolbar").style.display = "none";
+        document.getElementById("panels").style.display = "none";
+        document.getElementById("image-notice").style.display = "none";
+        document.getElementById("preview-pane").innerHTML = "";
+        document.getElementById("html-output").textContent = "";
+        document.getElementById("markdown-output").textContent = "";
+        document.getElementById("preview-pane").style.display = "block";
+        document.getElementById("html-pane").style.display = "none";
+        document.getElementById("markdown-pane").style.display = "none";
+        document.getElementById("copy-btn").textContent = "Copy HTML";
+        document
+          .querySelectorAll(".tab")
+          .forEach((t, i) => t.classList.toggle("active", i === 0));
+        fileInput.value = "";
+      }
+    </script>
+  </body>
+</html>
